@@ -1,6 +1,5 @@
 import uuid 
 import enum
-from enum import Enum
 from sqlalchemy.dialects.postgresql import UUID
 from pgvector.sqlalchemy import HalfVector
 from sqlalchemy import UniqueConstraint
@@ -32,7 +31,7 @@ class VideoStatus(str, enum.Enum):
     failed = "failed"
 
 
-class Videos(Base):
+class Video(Base):
     __tablename__ = "videos"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -41,16 +40,19 @@ class Videos(Base):
         default=uuid.uuid4
     )
     video_id: Mapped[str] = mapped_column(unique=True, nullable=False)
-    title: Mapped[str] = mapped_column(unique=True, nullable=False)
-    transcript: Mapped[str] = mapped_column(unique=True, nullable=False)
-    ai_summary: Mapped[str] = mapped_column(unique=True, nullable=True)
+    title: Mapped[str] = mapped_column(nullable=False)
+    transcript: Mapped[str] = mapped_column(nullable=True)
+    ai_summary: Mapped[str] = mapped_column(nullable=True)
     processing_status: Mapped[VideoStatus] = mapped_column(default=VideoStatus.pending)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     last_accessed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
-class User_Histories(Base):
+class UserHistory(Base):
     __tablename__ = "user_histories"
-
+    
+    __table_args__ = (
+        UniqueConstraint("user_id", "video_id"),
+    )
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), 
         primary_key=True, 
@@ -62,11 +64,7 @@ class User_Histories(Base):
     nullable=False)
     video_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("videos.id"), nullable=False)
     viewed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    __table_args__ = (
-        UniqueConstraint("user_id", "video_id"),
-    )
-
-class Video_Segments(Base):
+class VideoSegment(Base):
     __tablename__="video_segments"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -74,13 +72,16 @@ class Video_Segments(Base):
         primary_key=True, 
         default=uuid.uuid4
     )
-    video_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("videos.id"), nullable=False)
-    chunk_text: Mapped[str] = mapped_column(unique=True, nullable=False)
-    start_time: Mapped[int | None] = mapped_column(unique=True, nullable=True)
+    video_id: Mapped[uuid.UUID] = mapped_column(
+    UUID(as_uuid=True),
+    ForeignKey("videos.id"),
+    nullable=False)
+    chunk_text: Mapped[str] = mapped_column(nullable=False)
+    start_time: Mapped[int | None] = mapped_column(nullable=True)
     embedding: Mapped[list] = mapped_column(HalfVector(512))
 
 
-class Chat_Sessions(Base):
+class ChatSession(Base):
     __tablename__="chat_sessions"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -101,15 +102,15 @@ class ChatRole(str, enum.Enum):
     assistant = "assistant"
 
 
-class Chat_Messages(Base):
-    __tablename__ = "Chat_Messages"
+class ChatMessage(Base):
+    __tablename__ = "chat_messages"
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), 
         primary_key=True, 
         default=uuid.uuid4
     )
-    session_id = Mapped[uuid.UUID] = mapped_column(ForeignKey("chat_sessions.id"), nullable=False)
+    session_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("chat_sessions.id"), nullable=False)
     role: Mapped[ChatRole] = mapped_column(default=ChatRole.user)
-    content: Mapped[str] = mapped_column(unique=True, nullable=False)
+    content: Mapped[str] = mapped_column(nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
