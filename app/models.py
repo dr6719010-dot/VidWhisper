@@ -1,7 +1,7 @@
 import uuid 
 import enum
 from sqlalchemy.dialects.postgresql import UUID
-from pgvector.sqlalchemy import HalfVector
+from pgvector.sqlalchemy import HALFVEC
 from sqlalchemy import UniqueConstraint
 from datetime import datetime
 from sqlalchemy import ForeignKey
@@ -78,7 +78,7 @@ class VideoSegment(Base):
     nullable=False)
     chunk_text: Mapped[str] = mapped_column(nullable=False)
     start_time: Mapped[int | None] = mapped_column(nullable=True)
-    embedding: Mapped[list] = mapped_column(HalfVector(512))
+    embedding: Mapped[list] = mapped_column(HALFVEC(512))
 
 
 class ChatSession(Base):

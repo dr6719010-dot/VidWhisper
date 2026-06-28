@@ -5,6 +5,7 @@ class Settings(BaseSettings):
     REDIS_URL: str
     SECRET_KEY: str
     ALGORITHM: str
+    SYNC_DATABASE_URL: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
     REFRESH_TOKEN_EXPIRE_DAYS: int
     GEMINI_API_KEY: str
